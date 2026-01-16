@@ -1,14 +1,27 @@
+from pydantic import BaseModel, Field, validator
 from typing import Optional
-from pydantic import BaseModel, Field
 
+# CORRECCIÓN: Renombrado de 'TransactionExtract' a 'Transaction' para evitar el ImportError
 class Transaction(BaseModel):
-    """
-    Esquema para la extracción de transacciones financieras.
-    Sigue las directrices estrictas de la documentación técnica sección 6.
-    """
-    amount: float = Field(..., description="Valor absoluto de la transacción.")
-    currency: str = Field(default="PEN", description="Código ISO (PEN, USD). Por defecto: PEN.")
-    category: str = Field(..., description="Categoría inferida (ej. 'Transporte', 'Antojos').")
-    merchant: str = Field(..., description="Nombre del establecimiento o 'Varios'.")
-    date: str = Field(..., description="Formato YYYY-MM-DD.")
-    notes: Optional[str] = Field(None, description="Descripción original o resumen.")
+    amount: float = Field(..., description="The numeric amount of the transaction.")
+    currency: str = Field(default="PEN", description="Currency ISO code (e.g., PEN, USD).")
+    category: str = Field(..., description="Inferred category (e.g., Food, Transport).")
+    merchant: str = Field(..., description="The entity paid (e.g., Uber, Restaurant) or the concept.")
+    date: str = Field(..., description="Transaction date in YYYY-MM-DD format.")
+    notes: Optional[str] = Field(None, description="Additional context.")
+
+    # --- REGLA 1: Nada de montos cero o negativos ---
+    @validator('amount')
+    def amount_must_be_positive(cls, v):
+        if v is None or v <= 0:
+            raise ValueError("El monto debe ser un número positivo mayor a 0.")
+        return v
+
+    # --- REGLA 2: Nada de conceptos vagos ---
+    @validator('merchant')
+    def merchant_must_be_specific(cls, v):
+        # Lista negra de palabras vagas
+        vague_terms = ["algo", "cosas", "gasto", "compra", "lo de siempre", "nose"]
+        if not v or len(v) < 2 or v.lower().strip() in vague_terms:
+            raise ValueError("El concepto/comercio es demasiado vago. Necesito saber QUÉ compraste o DÓNDE.")
+        return v
