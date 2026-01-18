@@ -1,9 +1,19 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from datetime import datetime
+
+from dotenv import load_dotenv
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -15,18 +25,47 @@ engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 # --- MODELO: TRANSACCIONES ---
 class TransactionModel(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    date = Column(String, nullable=False)        # YYYY-MM-DD
-    amount = Column(Float, nullable=False)       # Guardamos float por ahora (10.50)
+    date = Column(String, nullable=False)  # YYYY-MM-DD
+    amount = Column(Float, nullable=False)  # Guardamos float por ahora (10.50)
     currency = Column(String, default="PEN")
-    category = Column(String, nullable=False)    # Inferencia de Moon
+    category = Column(String, nullable=False)  # Inferencia de Moon
     merchant = Column(String, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+
+
+# --- TABLA DE NOTAS ---
+class Note(Base):
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    tags = Column(
+        String, nullable=True
+    )  # Guardaremos las tags como string separado por comas "tag1,tag2"
+    category = Column(String, default="general")
+    created_at = Column(DateTime, default=datetime.now)
+
+
+# --- TABLA DE TAREAS ---
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String, nullable=False)
+    due_date = Column(
+        DateTime, nullable=True
+    )  # Aquí guardamos la fecha del recordatorio
+    priority = Column(String, default="normal")
+    status = Column(String, default="pending")  # pending, done, archived
+    created_at = Column(DateTime, default=datetime.now)
+
 
 # Función para crear las tablas si no existen
 def init_db():

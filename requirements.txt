@@ -6,3 +6,6 @@ python-dotenv
 sqlalchemy
 requests
 groq
+streamlit
+watchdog
+pyperclip
