@@ -1,6 +1,8 @@
 langgraph
 langchain-core
 langchain-groq
+langchain-google-genai
+langchain-xai
 pydantic
 python-dotenv
 sqlalchemy

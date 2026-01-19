@@ -6,6 +6,7 @@ Moon/
     .gitignore
     .env
     tools/
+        bundle_diff.py
         run_app.py
         install_profile.sh
         load_aliases.sh
@@ -21,9 +22,18 @@ Moon/
             run_local_test.py
             test_graph.py
         core/
+            observer.py
             database.py
             graph.py
             prompts.py
+            llm_client.py
+            nodes.py
+            state.py
+        skills/
+            finance.py
+            memory.py
+            profile.py
+            __init__.py
         modules/
             __init__.py
             common/

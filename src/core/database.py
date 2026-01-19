@@ -67,6 +67,29 @@ class Task(Base):
     created_at = Column(DateTime, default=datetime.now)
 
 
+# ---src/core/database.py ---
+# (Mantén tus imports existentes y agrega UserProfile)
+
+
+class UserProfile(Base):
+    """
+    Tabla para almacenar 'Hechos Singulares' del usuario.
+    Ej: Nombre, Edad, Ciudad, Equipo de Fútbol.
+    NO para listas o notas largas.
+    """
+
+    __tablename__ = "user_profile"
+
+    id = Column(Integer, primary_key=True, index=True)
+    # La clave debe ser única (ej: 'user_name'). Si existe, se sobrescribe.
+    key = Column(String, unique=True, index=True, nullable=False)
+    value = Column(String, nullable=False)
+    category = Column(
+        String, default="general"
+    )  # ej: 'personal', 'preferences', 'health'
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 # Función para crear las tablas si no existen
 def init_db():
     Base.metadata.create_all(bind=engine)
