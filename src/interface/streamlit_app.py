@@ -1,21 +1,22 @@
 import os
 import sys
+import time
+import warnings
 
-# --- 1. PARCHE DE RUTA (ESTO DEBE IR PRIMERO) ---
-# Calculamos la ruta raíz para que Python encuentre la carpeta 'src'
+# --- 0. SILENCIAR ADVERTENCIAS ---
+warnings.filterwarnings("ignore")
+
+# --- 1. PARCHE DE RUTA ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# CORRECCIÓN: Subimos solo 2 niveles (../..) para llegar a la carpeta 'Moon'
 project_root = os.path.abspath(os.path.join(current_dir, "../.."))
 sys.path.append(project_root)
 
-# --- 2. IMPORTS (AHORA SÍ) ---
-# La etiqueta '# noqa: E402' evita que el editor mueva estas líneas arriba al guardar
+# --- 2. IMPORTS ---
 import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 from langchain_core.messages import AIMessage, HumanMessage  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
-# Tus módulos internos
 from src.core.database import Note, SessionLocal, Task, TransactionModel  # noqa: E402
 from src.core.graph import app  # noqa: E402
 
@@ -25,6 +26,7 @@ st.set_page_config(page_title="Moon AI", page_icon="🌙", layout="wide")
 
 # --- FUNCIONES DE CARGA DE DATOS ---
 def get_data(model):
+    """Obtiene los últimos 20 registros de la tabla dada."""
     db: Session = SessionLocal()
     try:
         data = db.query(model).order_by(model.id.desc()).limit(20).all()
@@ -64,17 +66,37 @@ with tab1:
 
         st.session_state.messages.append(HumanMessage(content=user_input))
 
-        # 2. Procesar con Moon (Spinner de carga)
+        # 2. Procesar con Moon
         with st.chat_message("assistant", avatar="🤖"):
-            with st.spinner("Moon está pensando..."):
-                # Invocar al grafo con el historial completo
-                response = app.invoke({"messages": st.session_state.messages})
+            # Placeholder para mostrar que está pensando
+            status_placeholder = st.empty()
+            status_placeholder.markdown("⏳ *Moon está pensando...*")
 
-                # Obtener la última respuesta del AI
-                ai_msg = response["messages"][-1]
-                st.write(ai_msg.content)
+            start_total = time.time()
 
-                st.session_state.messages.append(ai_msg)
+            # Invocamos al grafo
+            response = app.invoke({"messages": st.session_state.messages})
+
+            end_total = time.time()
+            total_duration = end_total - start_total
+
+            # Limpiamos el texto de "pensando"
+            status_placeholder.empty()
+
+            # Mostrar respuesta final
+            ai_msg = response["messages"][-1]
+            st.write(ai_msg.content)
+
+            # --- SECCIÓN DE TIEMPOS (SIEMPRE VISIBLE) ---
+            # Usamos un expander que persiste después de la respuesta
+            with st.expander(f"⏱️ Detalles de Ejecución ({total_duration:.2f}s)"):
+                if "debug_logs" in response:
+                    for log in response["debug_logs"]:
+                        st.text(log)  # Usamos st.text para formato monospaced limpio
+                else:
+                    st.warning("No se recibieron logs de tiempo.")
+
+            st.session_state.messages.append(ai_msg)
 
 # --- PESTAÑA 2: CEREBRO (VISUALIZACIÓN) ---
 with tab2:
@@ -85,10 +107,9 @@ with tab2:
         data_tx = get_data(TransactionModel)
         if data_tx:
             df_tx = pd.DataFrame(data_tx)
-            # Limpieza visual
             if "_sa_instance_state" in df_tx.columns:
                 del df_tx["_sa_instance_state"]
-            st.dataframe(df_tx, use_container_width=True)
+            st.dataframe(df_tx, width="stretch", hide_index=True)
         else:
             st.info("No hay gastos registrados aún.")
 
@@ -99,7 +120,7 @@ with tab2:
             df_tasks = pd.DataFrame(data_tasks)
             if "_sa_instance_state" in df_tasks.columns:
                 del df_tasks["_sa_instance_state"]
-            st.dataframe(df_tasks, use_container_width=True)
+            st.dataframe(df_tasks, width="stretch", hide_index=True)
         else:
             st.info("No hay tareas pendientes.")
 
@@ -109,7 +130,7 @@ with tab2:
         df_notes = pd.DataFrame(data_notes)
         if "_sa_instance_state" in df_notes.columns:
             del df_notes["_sa_instance_state"]
-        st.dataframe(df_notes, use_container_width=True)
+        st.dataframe(df_notes, width="stretch", hide_index=True)
     else:
         st.info("Tu mente está vacía (de notas).")
 

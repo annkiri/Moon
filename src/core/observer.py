@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from langchain_core.messages import SystemMessage
@@ -6,58 +7,67 @@ from src.core.llm_client import get_chat_model
 from src.core.state import AgentState
 from src.skills import ALL_SKILLS
 
-# PROMPT MEJORADO: Lógica de separación de gastos (Split)
+# PROMPT ACTUALIZADO PARA FUNCTION CALLING NATIVO
 OBSERVER_PROMPT = """
 ROLE: Background Data Observer.
-OBJECTIVE: Scan the user's latest message and decide if a Tool must be called.
+OBJECTIVE: Analyze the conversation and call Tools ONLY if structured data can be extracted.
 
 --- CONTEXT ---
 CURRENT TIME: {current_time}
 
---- DECISION RULES ---
-1. USER PROFILE:
-   - Capture PERMANENT facts: user_name, birthday, emails, skills, likes/dislikes.
-   - Use SNAKE_CASE keys.
+--- INSTRUCTIONS ---
+1. YOUR JOB: Look for specific intents (Finance, Tasks, Ideas, Profile).
+2. EXTRACTION: DO NOT pass raw text to tools. You must extract the exact arguments (amount, merchant, key, value, etc.).
+3. CHIT-CHAT: If the user is just saying hello or asking questions, RETURN EMPTY (do not call tools).
+4. MULTI-ACTION: If the user lists multiple items, call the tool multiple times in parallel.
 
-2. TASKS:
-   - If user mentions a plan/date -> Call `save_todo`.
-   - Calculate 'due_date' strictly as 'YYYY-MM-DD HH:MM:SS'.
+--- SPECIFIC DOMAINS ---
 
-3. MONEY (CRITICAL - SPLIT ACTIONS):
-   - If user mentions MULTIPLE expenses, you MUST call `process_expense` multiple times (once per item).
-   - DO NOT send the full sentence to the tool. Split it.
-   - Example Input: "Taxi 10 and Food 20"
-   - Correct Output: Call `process_expense("Taxi 10")` AND Call `process_expense("Food 20")`.
-   - Incorrect Output: Call `process_expense("Taxi 10 and Food 20")`.
+[FINANCE]
+- Trigger: Spending money, purchases.
+- Tool: `process_expense`
+- Requirement: You MUST extract 'amount', 'merchant', and infer 'category'.
 
-4. IDEAS:
-   - Abstract thoughts or project ideas -> Call `save_thought`.
+[PROFILE]
+- Trigger (WRITE): User mentions their name, job, tech stack, or preferences.
+- Tool: `update_user_profile` (Extract 'key' and 'value').
+- Trigger (READ): User asks "Who am I?", "Do you know my name?", or asks about stored info.
+- Tool: `get_user_profile` (Extract 'category' if specific, or None).
 
-OUTPUT:
-- Call the tool via JSON or return EMPTY if just chit-chat.
-- DO NOT generate text responses.
+[TASKS & IDEAS]
+- Trigger: Future plans (Tasks) or abstract thoughts (Ideas).
+- Tools: `save_todo` or `save_thought`.
+
 """
 
 
 def observer_node(state: AgentState):
-    # Usamos el modelo que confirmaste que funciona
+    # Gemini 3 Flash con temperatura 0 es excelente llenando formularios (Schemas)
     llm = get_chat_model(
         temperature=0.0, provider="gemini", model_name="gemini-3-flash-preview"
     )
 
+    # VINCULAMOS LAS SKILLS (Aquí viajan tus Schemas de Pydantic hacia Gemini)
     llm_with_tools = llm.bind_tools(ALL_SKILLS)
+
     last_user_msg = state["messages"][-1]
 
-    # Inyección de Tiempo
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted_prompt = OBSERVER_PROMPT.format(current_time=current_time)
 
     system_msg = SystemMessage(content=formatted_prompt)
     messages = [system_msg, last_user_msg]
 
+    start_time = time.time()
     try:
+        # Gemini analiza y decide si llamar a una función o no
         response = llm_with_tools.invoke(messages)
-        return {"messages": [response]}
+        duration = time.time() - start_time
+
+        # Log para depuración
+        return {
+            "messages": [response],
+            "debug_logs": [f"👀 [Observer] Análisis en {duration:.2f}s"],
+        }
     except Exception as e:
-        print(f"⚠️ Error en Observer: {e}")
-        return {"messages": []}
+        return {"messages": [], "debug_logs": [f"⚠️ Error Observer: {e}"]}

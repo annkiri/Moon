@@ -1,43 +1,27 @@
-from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
-# --- MODELO PARA NOTAS (PENSAMIENTOS/IDEAS) ---
+# --- MODELO NOTAS ---
 class NoteEntry(BaseModel):
-    """
-    Modelo para capturar pensamientos, ideas, referencias o reflexiones.
-    NO tiene fecha de vencimiento ni acción inmediata.
-    """
-
-    content: str = Field(
-        ..., description="El contenido principal de la nota o pensamiento."
-    )
+    content: str = Field(..., description="El contenido principal de la nota.")
     tags: List[str] = Field(
         default_factory=list,
-        description="Etiquetas para organizar (ej: 'idea', 'proyecto', 'reflexion').",
+        description="Lista de etiquetas clave (ej: ['python', 'idea']).",
     )
     category: str = Field(
-        default="general",
-        description="Categoría general: 'personal', 'trabajo', 'moon', etc.",
+        default="general", description="Categoría: personal, trabajo, dev, etc."
     )
 
 
-# --- MODELO PARA TAREAS (ACCIONES/RECORDATORIOS) ---
+# --- MODELO TAREAS ---
 class TaskEntry(BaseModel):
-    """
-    Modelo para capturar acciones concretas, recordatorios o 'to-dos'.
-    SIEMPRE implica una obligación futura.
-    """
-
-    content: str = Field(
-        ..., description="La acción a realizar (ej: 'Comprar pan', 'Ir al doctor')."
-    )
+    content: str = Field(..., description="La acción concreta a realizar.")
     due_date: Optional[str] = Field(
         None,
-        description="Fecha de vencimiento en formato ISO 8601 (YYYY-MM-DD HH:MM:SS) inferida del contexto del usuario (ej: 'mañana' -> fecha de mañana).",
+        description="Fecha ISO 8601 (YYYY-MM-DD HH:MM:SS). Si el usuario dice 'mañana', calcúlalo.",
     )
     priority: str = Field(
-        default="normal", description="Prioridad inferida: 'low', 'normal', 'high'."
+        default="normal", description="Prioridad: 'low', 'normal', 'high'."
     )

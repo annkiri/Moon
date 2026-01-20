@@ -1,39 +1,49 @@
+from datetime import datetime
+
 from langchain_core.tools import tool
 
 from src.core.database import SessionLocal, TransactionModel
-from src.modules.finance.service import FinanceService
+
+# IMPORTAMOS EL SCHEMA (Tu red de seguridad)
+from src.modules.finance.schemas import Transaction
 
 
-@tool
-def process_expense(text: str):
+@tool(args_schema=Transaction)
+def process_expense(
+    amount: float,
+    merchant: str,
+    category: str,
+    currency: str = "PEN",
+    date: str = None,
+    notes: str = None,
+):
     """
-    Use this skill ONLY when the user mentions spending money, buying something,
-    or a financial transaction.
-    Input: The raw text of the expense.
+    Registra un gasto en la base de datos.
+    El Observer debe extraer MONTO, COMERCIO y CATEGORÍA antes de llamar a esto.
     """
-    # Instanciamos el servicio
-    service = FinanceService()
-
     try:
-        print(f"[SKILL] Finance Triggered: {text}")
-        data = service.extract_transaction_data(text)
-
-        # Guardamos en SQLite
+        # Abrimos DB
         db = SessionLocal()
+
+        # Validación de fecha por si Gemini la manda vacía
+        final_date = date if date else datetime.now().strftime("%Y-%m-%d")
+
+        # Guardado directo (Velocidad pura)
         new_tx = TransactionModel(
-            date=data.date,
-            amount=data.amount,
-            currency=data.currency,
-            category=data.category,
-            merchant=data.merchant,
-            notes=data.notes,
+            date=final_date,
+            amount=amount,
+            currency=currency,
+            category=category,
+            merchant=merchant,
+            notes=notes,
         )
+
         db.add(new_tx)
         db.commit()
         db.refresh(new_tx)
         db.close()
 
-        return f"Gasto registrado correctamente: {data.model_dump_json()}"
+        return f"✅ Gasto guardado: {amount} {currency} en {merchant} ({category})"
 
     except Exception as e:
-        return f"Error procesando el gasto: {str(e)}"
+        return f"❌ Error guardando gasto: {str(e)}"

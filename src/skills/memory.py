@@ -1,55 +1,75 @@
 import json
-from typing import Optional
+from datetime import datetime
+from typing import List, Optional
 
 from langchain_core.tools import tool
 
-from src.core.database import SessionLocal
+from src.core.database import Note, SessionLocal, Task
+
+# Importamos los Schemas para dárselos a Gemini
 from src.modules.knowledge.schemas import NoteEntry, TaskEntry
-from src.modules.knowledge.service import KnowledgeService
 
 
-@tool
-def save_thought(content: str, tags: str = "", category: str = "general"):
+@tool(args_schema=NoteEntry)
+def save_thought(content: str, tags: List[str] = [], category: str = "general"):
     """
-    Use this tool to save generic thoughts, ideas, references, or static information.
-    NOT for tasks or things to do later.
-    Args:
-        content: The main text of the note.
-        tags: Comma-separated keywords (e.g. "ideas, projects").
-        category: General category (default: 'general').
+    Guarda una NOTA, pensamiento, idea o referencia estática.
+    NO usar para tareas que requieren acción futura.
     """
-    print(f"[SKILL] Memory (Thought) Triggered: {content}")
     try:
         db = SessionLocal()
-        service = KnowledgeService(db)
-        # Limpieza de tags
-        tag_list = [t.strip() for t in tags.split(",")] if tags else []
 
-        note_data = NoteEntry(content=content, tags=tag_list, category=category)
-        result = service.save_note(note_data)
+        # Convertimos la lista de tags a string para SQLite (ej: "idea,python")
+        tags_str = ",".join(tags) if tags else ""
+
+        new_note = Note(
+            content=content, tags=tags_str, category=category, created_at=datetime.now()
+        )
+
+        db.add(new_note)
+        db.commit()
+        db.refresh(new_note)
         db.close()
-        return json.dumps(result, ensure_ascii=False)
+
+        return f"✅ Nota guardada (ID: {new_note.id})"
+
     except Exception as e:
-        return f"Error guardando nota: {str(e)}"
+        return f"❌ Error guardando nota: {str(e)}"
 
 
-@tool
+@tool(args_schema=TaskEntry)
 def save_todo(content: str, due_date: Optional[str] = None, priority: str = "normal"):
     """
-    Use this tool to save TASKS, reminders, or actions that need to be done in the future.
-    Args:
-        content: The action to perform (e.g., "Buy milk").
-        due_date: ISO 8601 date string or None (inferred from user context).
-        priority: 'normal', 'high', or 'low'.
+    Guarda una TAREA o recordatorio que requiere una acción futura.
     """
-    print(f"[SKILL] Memory (Task) Triggered: {content} | Due: {due_date}")
     try:
         db = SessionLocal()
-        service = KnowledgeService(db)
 
-        task_data = TaskEntry(content=content, due_date=due_date, priority=priority)
-        result = service.save_task(task_data)
+        # Validación de fecha (Gemini nos manda string ISO, lo convertimos a objeto)
+        parsed_date = None
+        if due_date:
+            try:
+                parsed_date = datetime.fromisoformat(due_date)
+            except ValueError:
+                # Si falla el formato, guardamos sin fecha pero avisamos en el log
+                print(f"[WARN] Formato de fecha inválido: {due_date}")
+                parsed_date = None
+
+        new_task = Task(
+            content=content,
+            due_date=parsed_date,
+            priority=priority,
+            status="pending",
+            created_at=datetime.now(),
+        )
+
+        db.add(new_task)
+        db.commit()
+        db.refresh(new_task)
         db.close()
-        return json.dumps(result, ensure_ascii=False)
+
+        date_msg = f" para {parsed_date}" if parsed_date else ""
+        return f"✅ Tarea agendada: {content}{date_msg}"
+
     except Exception as e:
-        return f"Error guardando tarea: {str(e)}"
+        return f"❌ Error guardando tarea: {str(e)}"
