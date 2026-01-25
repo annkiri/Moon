@@ -1,8 +1,18 @@
+# --- CORE ---
 langgraph
 langchain-core
 langchain-groq
-langchain-google-genai
-langchain-xai
+langchain-community
+langsmith
+
+# --- BRAINS & MEMORY ---
+semantic-router
+fastembed
+qdrant-client
+mem0ai
+instructor
+
+# --- INFRA ---
 pydantic
 python-dotenv
 sqlalchemy
