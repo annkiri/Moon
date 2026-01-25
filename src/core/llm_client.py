@@ -20,7 +20,7 @@ def get_chat_model(temperature=0.0, provider=None, model_name=None):
     target_provider = provider or os.getenv("AI_PROVIDER", "gemini")
     target_provider = target_provider.lower()
 
-    # --- OPCIÓN 1: GOOGLE GEMINI (Tu Observer) ---
+    # --- OPCIÓN 1: GOOGLE GEMINI ---
     if target_provider == "gemini":
         default_model = "gemini-3-flash-preview"
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -31,7 +31,8 @@ def get_chat_model(temperature=0.0, provider=None, model_name=None):
             model=model_name or default_model,
             temperature=temperature,
             google_api_key=api_key,
-            convert_system_message_to_human=True,
+            # [CORRECCIÓN] Eliminado 'convert_system_message_to_human=True'
+            # Los modelos modernos soportan SystemMessage nativamente.
         )
 
     # --- OPCIÓN 2: XAI GROK (Legacy / Fallback) ---
@@ -59,7 +60,7 @@ def get_chat_model(temperature=0.0, provider=None, model_name=None):
         return ChatGroq(
             model_name=model_name or "llama-3.3-70b-versatile",
             temperature=temperature,
-            groq_api_key=api_key,  # Corrección: nombre exacto del parámetro
+            groq_api_key=api_key,
         )
 
     else:

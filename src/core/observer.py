@@ -42,12 +42,14 @@ CURRENT TIME: {current_time}
 
 
 def observer_node(state: AgentState):
-    # Gemini 3 Flash con temperatura 0 es excelente llenando formularios (Schemas)
+    # --- CAMBIO CRITICO: USA GROQ (Llama 3.3) ---
+    # Llama 3.3-70b es extremadamente rápido y excelente siguiendo esquemas JSON.
+    # Esto reduce la latencia de ~15s (Gemini Preview) a ~0.5s.
     llm = get_chat_model(
-        temperature=0.0, provider="gemini", model_name="gemini-3-flash-preview"
+        temperature=0.0, provider="groq", model_name="llama-3.3-70b-versatile"
     )
 
-    # VINCULAMOS LAS SKILLS (Aquí viajan tus Schemas de Pydantic hacia Gemini)
+    # VINCULAMOS LAS SKILLS (Aquí viajan tus Schemas de Pydantic hacia Llama)
     llm_with_tools = llm.bind_tools(ALL_SKILLS)
 
     last_user_msg = state["messages"][-1]
@@ -60,14 +62,14 @@ def observer_node(state: AgentState):
 
     start_time = time.time()
     try:
-        # Gemini analiza y decide si llamar a una función o no
+        # Llama 3.3 analiza y decide si llamar a una función
         response = llm_with_tools.invoke(messages)
         duration = time.time() - start_time
 
         # Log para depuración
         return {
             "messages": [response],
-            "debug_logs": [f"👀 [Observer] Análisis en {duration:.2f}s"],
+            "debug_logs": [f"👀 [Observer] Análisis (Groq) en {duration:.2f}s"],
         }
     except Exception as e:
         return {"messages": [], "debug_logs": [f"⚠️ Error Observer: {e}"]}
