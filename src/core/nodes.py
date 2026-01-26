@@ -1,97 +1,109 @@
+import threading  # Para la memoria en segundo plano
 import time
 from datetime import datetime
-from typing import Literal
 
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import SystemMessage
 
-# IMPORTS PROPIOS
+# Imports internos
 from src.core.llm_client import get_chat_model
+
+# Importamos la Memoria
+from src.core.memory import add_memory, get_memories
 from src.core.prompts import MONDRI_IDENTITY
+from src.core.router import classify_intent
 from src.core.state import AgentState
 
-# Importamos las skills para vincularlas y crear el mapa
-from src.skills import ALL_SKILLS
-
-# [NUEVO] Mapeo dinámico: Nombre de la herramienta -> Función real
-# Esto evita tener que escribir "if tool == 'nombre'" manualmente.
-TOOL_MAP = {t.name: t for t in ALL_SKILLS}
+# Importamos las Skills (Tus manos)
+from src.skills.finance_extractor import extract_and_save_expense
+from src.skills.tasks_extractor import extract_and_save_task
 
 
-# --- NODO AGENTE ---
+# --- 1. NODO ROUTER ---
+def router_node(state: AgentState):
+    """Clasifica la intención del usuario."""
+    last_msg = state["messages"][-1].content
+    intent = classify_intent(last_msg)
+    return {"intent": intent}
+
+
+# --- 2. NODO FINANZAS (El que te faltaba) ---
+def finance_node(state: AgentState):
+    """Extrae y guarda gastos."""
+    last_msg = state["messages"][-1].content
+    start = time.perf_counter()
+
+    result = extract_and_save_expense(last_msg)
+    elapsed = time.perf_counter() - start
+
+    if result["status"] == "success":
+        report = f"[SYSTEM]: Gasto guardado. Detalles: {result['summary']}. Confirma sarcásticamente."
+        log = f"💰 [Finance] Éxito ({elapsed:.2f}s)"
+    else:
+        report = f"[SYSTEM]: Error guardando gasto: {result['summary']}."
+        log = f"❌ [Finance] Error ({elapsed:.2f}s)"
+
+    return {"messages": [SystemMessage(content=report)], "debug_logs": [log]}
+
+
+# --- 3. NODO TAREAS ---
+def tasks_node(state: AgentState):
+    """Extrae y guarda tareas/recordatorios."""
+    last_msg = state["messages"][-1].content
+    start = time.perf_counter()
+
+    result = extract_and_save_task(last_msg)
+    elapsed = time.perf_counter() - start
+
+    if result["status"] == "success":
+        report = f"[SYSTEM]: Tarea agendada. Detalles: {result['summary']}. Confirma sarcásticamente que se lo recordarás."
+        log = f"📅 [Tasks] Éxito ({elapsed:.2f}s)"
+    else:
+        report = f"[SYSTEM]: Error agendando: {result['summary']}."
+        log = f"❌ [Tasks] Error ({elapsed:.2f}s)"
+
+    return {"messages": [SystemMessage(content=report)], "debug_logs": [log]}
+
+
+# --- 4. NODO AGENTE (ASÍNCRONO / RÁPIDO) ---
 def agent_node(state: AgentState):
-    # ESTRATEGIA: Usamos Groq (Llama 3.3) para velocidad extrema
-    llm = get_chat_model(
-        temperature=0.7, provider="groq", model_name="llama-3.3-70b-versatile"
+    """Mondri responde rápido y guarda memoria en segundo plano."""
+    # Usamos el modelo grande (70b) o rápido (8b) según prefieras
+    llm = get_chat_model(temperature=0.7, model_name="llama-3.3-70b-versatile")
+
+    last_msg = state["messages"][-1].content
+    user_id = "andy_dev"
+
+    # A. LECTURA SÍNCRONA (Necesitamos saber esto YA para responder bien)
+    memories = get_memories(user_id=user_id, query=last_msg)
+
+    memory_context = ""
+    if memories:
+        memory_list = "\n- ".join(memories)
+        memory_context = f"\n[MEMORIA PREVIA]:\n{memory_list}\n(Úsalo para contexto, no repitas como robot)."
+        # Log ligero para consola
+        print(f"🧠 [Agent] Hits de memoria: {len(memories)}")
+
+    # B. ESCRITURA ASÍNCRONA (Fire & Forget)
+    # Si es información de perfil, guardamos en un hilo aparte para no bloquear el chat.
+    intent = state.get("intent")
+    if intent == "profile":
+        print("🚀 [Background] Guardando memoria en segundo plano...")
+        # Creamos y lanzamos el hilo
+        threading.Thread(target=add_memory, args=(user_id, last_msg)).start()
+
+    # C. GENERACIÓN DE RESPUESTA
+    current_time = datetime.now().strftime("%A %d de %B, %H:%M")
+    system_prompt = (
+        MONDRI_IDENTITY + f"\n[System Time: {current_time}]" + memory_context
     )
 
-    # El Agente NO tiene tools vinculadas, solo charla.
+    messages = [SystemMessage(content=system_prompt)] + state["messages"]
 
-    current_time = datetime.now().strftime("%A %d de %B de %Y, %H:%M")
-    time_context = f"\n[System Time: {current_time}]\n"
-    full_system_prompt = MONDRI_IDENTITY + time_context
-
-    system_msg = SystemMessage(content=full_system_prompt)
-    messages = [system_msg] + state["messages"]
-
-    start_time = time.time()
     try:
-        # Invocamos directo
         response = llm.invoke(messages)
-
-        duration = time.time() - start_time
-        log_msg = f"💬 [Agent] Mondri (Groq) respondió en {duration:.2f}s"
-
-        return {"messages": [response], "debug_logs": [log_msg]}
+        return {
+            "messages": [response],
+            "debug_logs": [f"🧠 Memory Hits: {len(memories)}"],
+        }
     except Exception as e:
-        return {"messages": [], "debug_logs": [f"⚠️ Error en Agent: {e}"]}
-
-
-# --- NODO HERRAMIENTAS (CORREGIDO) ---
-def tool_node(state: AgentState):
-    last_message = state["messages"][-1]
-    tool_calls = getattr(last_message, "tool_calls", [])
-
-    if not tool_calls:
-        return {"messages": []}
-
-    results = []
-    logs = []
-
-    for call in tool_calls:
-        tool_name = call["name"]
-        tool_args = call["args"]  # Gemini ya nos da esto como diccionario limpio
-
-        start_tool = time.time()
-
-        # BUSCAMOS LA HERRAMIENTA EN EL MAPA
-        if tool_name in TOOL_MAP:
-            try:
-                # [CORRECCIÓN CRÍTICA]
-                # Pasamos 'tool_args' DIRECTAMENTE a la herramienta.
-                # Ya no intentamos buscar "text" ni convertir a string.
-                tool_instance = TOOL_MAP[tool_name]
-                output = tool_instance.invoke(tool_args)
-            except Exception as e:
-                output = f"Error crítico ejecutando skill {tool_name}: {str(e)}"
-        else:
-            output = f"Error: Skill '{tool_name}' no encontrada en TOOL_MAP. Revisa src/skills/__init__.py"
-
-        duration = time.time() - start_tool
-
-        # Log para UI
-        logs.append(f"🛠️ [Tool] {tool_name} ejecutada en {duration:.2f}s")
-
-        results.append(
-            ToolMessage(tool_call_id=call["id"], name=tool_name, content=str(output))
-        )
-
-    return {"messages": results, "debug_logs": logs}
-
-
-# --- LOGICA CONDICIONAL ---
-def should_continue(state: AgentState) -> Literal["tools", "agent"]:
-    last_message = state["messages"][-1]
-    tool_calls = getattr(last_message, "tool_calls", [])
-    if tool_calls:
-        return "tools"
-    return "agent"
+        return {"messages": [], "debug_logs": [f"⚠️ Error Mondri: {e}"]}

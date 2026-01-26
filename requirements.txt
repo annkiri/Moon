@@ -21,3 +21,4 @@ groq
 streamlit
 watchdog
 pyperclip
+sentence-transformers

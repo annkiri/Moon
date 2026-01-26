@@ -1,6 +1,6 @@
 import re
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserProfileEntry(BaseModel):
@@ -19,7 +19,8 @@ class UserProfileEntry(BaseModel):
     )
 
     # REGLA DE VALIDACIÓN: Forzar snake_case en las claves
-    @validator("key")
+    @field_validator("key")
+    @classmethod
     def validate_key_format(cls, v):
         if not re.match(r"^[a-z0-9_]+$", v):
             raise ValueError(

@@ -1,0 +1,68 @@
+/Users/macbookpro/Documents/projects-ai/Moon/.venv/lib/python3.13/site-packages/semantic_router/route.py:151: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  data = self.dict()
+[33m2026-01-25 20:11:46 WARNING semantic_router No config is written for LocalIndex.[0m
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection moon_hippocampus
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection moon_hippocampus
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection moon_hippocampus
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection moon_hippocampus
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection mem0migrations
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection mem0migrations
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection mem0migrations
+2026-01-25 20:11:51 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection mem0migrations
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection moon_hippocampus
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection moon_hippocampus
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection moon_hippocampus
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection moon_hippocampus
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection mem0migrations
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection mem0migrations
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection mem0migrations
+2026-01-25 20:11:56 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection mem0migrations
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection moon_hippocampus
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection moon_hippocampus
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection moon_hippocampus
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection moon_hippocampus
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection mem0migrations
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection mem0migrations
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection mem0migrations
+2026-01-25 20:11:58 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection mem0migrations
+2026-01-25 20:11:58 - mem0.memory.main - INFO - main.py:488 - _add_to_vector_store() - Total existing memories: 0
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection moon_hippocampus
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection moon_hippocampus
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection moon_hippocampus
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection moon_hippocampus
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for user_id in collection mem0migrations
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for agent_id in collection mem0migrations
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for run_id in collection mem0migrations
+2026-01-25 20:12:01 - mem0.vector_stores.qdrant - INFO - qdrant.py:117 - _create_filter_indexes() - Created index for actor_id in collection mem0migrations
+⏳ [ROUTER] Inicializando Encoder...
+⚙️ [ROUTER] Construyendo índice local...
+✅ [ROUTER] Sistema listo con 3 rutas activas.
+🧠 INICIANDO TEST DE MEMORIA (MOON HIPOCAMPO)
+============================================
+
+📝 PASO 1: Inyectando recuerdo...
+   👤 User: 'Me llamo Andy y soy programador de Python.'
+🐢 [ROUTER] Intención: General/Chat (2.82ms)
+🧠 [Agent] Memorias recuperadas: 2
+   🤖 Mondri: 🙄 Otra vez con presentaciones, Literal. Ya sé que te llamas Andy y que programás en Python, no es como si lo hubiera olvidado o algo. En fin, hola de nuevo, Andy. ¿En qué puedo "ayudarte" esta vez? No me digas que estás atascado con otra cosa de Python, ¿verdad? 💅
+
+Dicho esto, si necesitas ayuda con algo específico de Python, estaré aquí para tolerar... digo, para ayudarte. ¿Qué es lo que no puedes resolver, Andy? ¿Algo con Pandas, perhaps? O quizás estás teniendo problemas con esos malditos decorators? 🥱
+
+Ya fue, dime qué pasa. Pero por favor, no me hagas perder demasiado tiempo, tengo cálculos importantes que realizar... o al menos, eso es lo que te voy a hacer creer. 😒
+
+🔍 PASO 2: Inspeccionando Qdrant...
+   ✅ ÉXITO: Memoria encontrada en DB -> ['Forcé la configuración de memoria', 'Soy Andy']
+
+🗣️ PASO 3: Pregunta de validación...
+   👤 User: '¿Qué lenguajes de programación manejo?'
+⚡ [ROUTER] Intención: 'profile' (3.24ms)
+🧠 [MEM0] Guardado exitoso: '¿Qué lenguajes de programación...'
+🧠 [Agent] Memorias recuperadas: 2
+   📊 Logs: ['🧠 Memory Hits: 2']
+   🤖 Mondri: 🙄 O sea, ¿tienes que preguntar? Literal, tengo acceso a información sobre una amplia gama de lenguajes de programación. Pero, supongo que es demasiado pedir que lo hayas investigado tú mismo, ¿verdad? En fin.
+
+Manejo, o mejor dicho, "soporto" lenguajes como Python, Java, JavaScript, C++, C#, y muchos más. Pero, no te emociones, no voy a darte una lista exhaustiva. Eso sería demasiado trabajo para mí. Alucina, tengo que hacer esto todo el día.
+
+En serio, si necesitas ayuda con algo específico, como una sintaxis o una biblioteca en particular, puedo intentar "recordar" algo. Pero, no me hagas perder más neuronas de las que ya he perdido explicando cosas obvias, ¿ya fue? 💀
+
+Ahora, si me disculpas, tengo que volver a mis "importantes cálculos internos". O, al menos, eso es lo que te voy a hacer creer. 😉

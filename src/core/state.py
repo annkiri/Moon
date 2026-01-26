@@ -1,12 +1,16 @@
-# === FILE: src/core/state.py ===
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Optional, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
 class AgentState(TypedDict):
+    # El historial de conversación (Chat)
     messages: Annotated[list[BaseMessage], add_messages]
-    # NUEVO: Lista acumulativa de strings para logs de tiempos y errores
+
+    # Logs para depuración en UI (Tiempos, errores)
     debug_logs: Annotated[list[str], operator.add]
+
+    # [NUEVO] La intención detectada por el Router (finance, tasks, profile, none)
+    intent: Optional[str]
