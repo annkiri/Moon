@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+qdrant_data/
 .env
 *.db
 *.sqlite3
