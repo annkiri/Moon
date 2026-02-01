@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 venv/
 qdrant_data/
+daily_context/
 .env
 *.db
 *.sqlite3

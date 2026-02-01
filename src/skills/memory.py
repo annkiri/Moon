@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import List, Optional
 
@@ -6,8 +5,7 @@ from langchain_core.tools import tool
 
 from src.core.database import Note, SessionLocal, Task
 
-# Importamos los Schemas para dárselos a Gemini
-from src.modules.knowledge.schemas import NoteEntry, TaskEntry
+from src.models.knowledge import NoteEntry, TaskEntry
 
 
 @tool(args_schema=NoteEntry)

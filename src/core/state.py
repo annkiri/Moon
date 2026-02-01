@@ -12,5 +12,5 @@ class AgentState(TypedDict):
     # Logs para depuración en UI (Tiempos, errores)
     debug_logs: Annotated[list[str], operator.add]
 
-    # [NUEVO] La intención detectada por el Router (finance, tasks, profile, none)
+    # Intención detectada por el Router (finance, tasks, profile, None)
     intent: Optional[str]

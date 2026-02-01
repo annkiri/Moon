@@ -2,8 +2,7 @@ from langchain_core.tools import tool
 
 from src.core.database import SessionLocal, UserProfile
 
-# Importamos el nuevo Schema
-from src.modules.profile.schemas import UserProfileEntry
+from src.models.profile import UserProfileEntry
 
 
 @tool(args_schema=UserProfileEntry)

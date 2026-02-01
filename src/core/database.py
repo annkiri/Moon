@@ -59,16 +59,12 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     content = Column(String, nullable=False)
-    due_date = Column(
-        DateTime, nullable=True
-    )  # Aquí guardamos la fecha del recordatorio
-    priority = Column(String, default="normal")
+    due_date = Column(String, nullable=True)  # YYYY-MM-DD HH:MM o None
+    priority = Column(String, default="normal")  # high, normal, low
     status = Column(String, default="pending")  # pending, done, archived
+    completed = Column(Boolean, default=False)
+    user_id = Column(String, default="andy_dev")
     created_at = Column(DateTime, default=datetime.now)
-
-
-# ---src/core/database.py ---
-# (Mantén tus imports existentes y agrega UserProfile)
 
 
 class UserProfile(Base):

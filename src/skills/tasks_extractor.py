@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 
 import instructor
 from dotenv import load_dotenv
@@ -17,8 +17,8 @@ class Task(BaseModel):
 
 
 class TasksExtraction(BaseModel):
-    task: Optional[Task] = None
-    summary: str
+    tasks: List[Task] = Field(default_factory=list, description="Lista de tareas extraídas")
+    summary: str = ""
 
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -29,37 +29,63 @@ def extract_and_save_task(user_input: str):
     try:
         # Calcular contexto de fecha
         now = datetime.now()
-        context_date = f"Hoy es {now.strftime('%A %Y-%m-%d %H:%M')}"
+        tomorrow = now + timedelta(days=1)
+        context_date = f"Hoy es {now.strftime('%A %Y-%m-%d %H:%M')}. Mañana es {tomorrow.strftime('%Y-%m-%d')}."
 
         resp = instructor_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             response_model=TasksExtraction,
             messages=[
                 {
                     "role": "system",
-                    "content": f"""
-                    Eres un asistente ejecutivo. {context_date}.
+                    "content": f"""Extrae TODAS las tareas/recordatorios del texto.
+                    
+{context_date}
 
-                    REGLAS CRÍTICAS:
-                    1. Si el usuario hace una PREGUNTA (ej: "¿Qué es un algoritmo?", "¿Cómo funciona X?"), NO extraigas tarea. Devuelve task=None.
-                    2. Solo extrae tarea si hay una INTENCIÓN DE ACCIÓN (ej: "Recuérdame", "Tengo que", "Agenda").
-                    3. Si no hay tarea clara, task debe ser null.
-                    """,
+Para cada tarea encontrada:
+- content: la acción a realizar
+- due_date: fecha y hora en formato YYYY-MM-DD HH:MM (si se menciona "mañana", usa {tomorrow.strftime('%Y-%m-%d')})
+- priority: high, normal, o low
+
+Si el usuario hace una PREGUNTA (ej: "¿Qué es X?"), NO extraigas tareas.
+Si hay múltiples tareas, extrae TODAS.""",
                 },
                 {"role": "user", "content": user_input},
             ],
             temperature=0.0,
         )
 
-        if not resp.task:
-            return {"status": "ignored", "summary": "No se detectó una tarea clara."}
+        if not resp.tasks:
+            return {"status": "ignored", "summary": "No se detectaron tareas claras."}
 
-        # Simulación de guardado (ID 999 para pruebas)
-        return {
-            "status": "success",
-            "summary": f"Tarea: {resp.task.content} ({resp.task.due_date})",
-            "data": resp.task.model_dump(),
-        }
+        # Guardar TODAS las tareas en SQLite
+        from src.core.database import SessionLocal, Task as TaskModel
+        
+        db = SessionLocal()
+        try:
+            saved_tasks = []
+            for task in resp.tasks:
+                new_task = TaskModel(
+                    content=task.content,
+                    due_date=task.due_date,
+                    priority=task.priority,
+                    completed=False,
+                    user_id="andy_dev"
+                )
+                db.add(new_task)
+                saved_tasks.append(task.content)
+            
+            db.commit()
+            
+            return {
+                "status": "success",
+                "summary": f"Guardadas {len(resp.tasks)} tareas: {', '.join(saved_tasks)}",
+                "data": [t.model_dump() for t in resp.tasks],
+            }
+        finally:
+            db.close()
 
     except Exception as e:
         return {"status": "error", "summary": str(e)}
+
+

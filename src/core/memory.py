@@ -43,7 +43,7 @@ def get_memory_client():
         return _memory_instance
 
     # Si no existe, la creamos (solo pasa la primera vez)
-    print("🏗️ [SYSTEM] Inicializando motor de memoria (esto solo debe pasar una vez)...")
+    print("[INIT] Inicializando motor de memoria...")
     _memory_instance = Memory.from_config(config)
     return _memory_instance
 
@@ -52,9 +52,9 @@ def add_memory(user_id: str, text: str):
     try:
         m = get_memory_client()
         m.add(text, user_id=user_id)
-        print(f"🧠 [MEM0] Guardado exitoso.")
+        print("[MEMORY] Guardado exitoso")
     except Exception as e:
-        print(f"⚠️ [MEM0] Error escribiendo: {e}")
+        print(f"[WARN] Error escribiendo memoria: {e}")
 
 
 def get_memories(user_id: str, query: str = None):
@@ -82,5 +82,5 @@ def get_memories(user_id: str, query: str = None):
         return cleaned_memories
 
     except Exception as e:
-        print(f"⚠️ [MEM0] Error leyendo: {e}")
+        print(f"[WARN] Error leyendo memoria: {e}")
         return []

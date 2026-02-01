@@ -23,4 +23,9 @@ diff() {
     python tools/bundle_diff.py
 }
 
-echo "   [INFO] Aliases ready: 'bundle', 'tree', 'db', 'run', 'diff' "
+dev() {
+    # Levanta API + Frontend en un solo comando
+    python tools/run_dev.py "$@"
+}
+
+echo "   [INFO] Aliases ready: 'bundle', 'tree', 'db', 'run', 'diff', 'dev' "

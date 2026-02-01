@@ -19,6 +19,9 @@ sqlalchemy
 requests
 groq
 streamlit
+fastapi
+uvicorn[standard]
+sse-starlette
 watchdog
 pyperclip
 sentence-transformers
